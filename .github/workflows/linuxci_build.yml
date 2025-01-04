@@ -64,8 +64,6 @@ jobs:
             -DCMAKE_C_FLAGS=-march=x86-64 \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
-            -DCMAKE_GENERATOR_PLATFORM=x86_64 \
             -DENABLE_ANALYTICS=OFF \
             -DENABLE_AUTOUPDATE=OFF \
             -DENABLE_BLUEZ=OFF \
