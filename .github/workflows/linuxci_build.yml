@@ -15,8 +15,7 @@ jobs:
     steps:
       - name: Setup dev environment
         run: |
-          #sudo add-apt-repository ppa:okirby/qt6-backports && sudo apt update
-          sudo apt install build-essential \
+          sudo apt update && sudo apt install build-essential \
             git \
             cmake \
             ninja-build \
@@ -28,6 +27,44 @@ jobs:
       
       - name: Build
         run: |
-          dpkg -l | grep qt
-          ls
+          # dpkg -l | grep qt # check qt is version 6
+          mkdir -p build/out
+
+          build_path="./build"
+          out_path="./build/out"
+          
+          git -c submodule."Externals/Qt".update=none \
+          -c submodule."Externals/FFmpeg-bin".update=none \
+          -c submodule."Externals/libadrenotools".update=none \
+          submodule update --init --recursive \
+          && git pull --recurse-submodules
+
+          cmake -S . -B "$build_path" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$out_path" \
+            -DCMAKE_CXX_FLAGS=-march=native \
+            -DCMAKE_C_FLAGS=-march=native \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DENABLE_ANALYTICS=OFF \
+            -DENABLE_AUTOUPDATE=OFF \
+            -DENABLE_BLUEZ=OFF \
+            -DENABLE_TESTS=OFF \
+            -DLINUX_LOCAL_DEV=ON \
+            -DUSE_DISCORD_PRESENCE=OFF \
+            -DUSE_RETRO_ACHIEVEMENTS=OFF \
+            -DUSE_SYSTEM_LIBS=ON \
+            -GNinja
+
+          ninja -C "$build_path" && ninja -C "$build_path" install
+
+          cp -r ./Data/Sys/ "$out_path"/Binaries/
+
+          touch "$out_path"/Binaries/portable.txt
+
   
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dolphin-artifact 
+          path: ./build/out/ 
