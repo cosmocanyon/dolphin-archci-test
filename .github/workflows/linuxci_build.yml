@@ -59,6 +59,13 @@ jobs:
           mkdir -p ./build ./out
           build_path="./build"
           out_path="./out"
+
+          NUM_CPUS=$(nproc)
+          MAX_CORES=4  # Set a max number of cores to avoid overloading the system
+          CORES_TO_USE=$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
+          
+          echo "$NUM_CPUS"
+          echo "$CORES_TO_USE"
           
           cmake -S . -B "$build_path" \
             -DCMAKE_BUILD_TYPE=Release \
