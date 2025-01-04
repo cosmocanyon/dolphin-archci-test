@@ -2,50 +2,70 @@ on:
   workflow_dispatch:
   push:
     branches:
-    - master
+      - master
   pull_request:
     branches:
-    - master
+      - master
 
 jobs:
   build:
-    name: deploy standalone build for arch-linux
-    runs-on: ubuntu-latest
+    name: Build Dolphin for x86_64
+    runs-on: ubuntu-latest  # You can use ubuntu-latest to ensure it's a 64-bit machine
 
     steps:
       - name: Setup dev environment
         run: |
-          sudo apt update && sudo apt install build-essential \
+          sudo apt update && sudo apt install -y build-essential \
             git \
             cmake \
             ninja-build \
             ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libevdev-dev libusb-1.0-0-dev libxrandr-dev libxi-dev libpangocairo-1.0-0 qt6-base-private-dev libqt6svg6-dev libbluetooth-dev libasound2-dev libpulse-dev libgl1-mesa-dev libcurl4-openssl-dev
-          sudo apt install libudev-dev libsystemd-dev || sudo apt install libeudev-dev #distros without systemd like AntiX must use eudev instead
-          
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Build
-        run: |
-          # dpkg -l | grep qt # check qt is version 6
-          mkdir -p build/out
+          sudo apt install -y libudev-dev libsystemd-dev || sudo apt install -y libeudev-dev
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Cache submodules
+      - name: Cache Git submodules
+        uses: actions/cache@v4
+        with:
+          path: |
+            .git/modules
+            .git/submodules
+          key: ${{ runner.os }}-dolphin-submodules-${{ hashFiles('**/.gitmodules') }}
+          restore-keys: |
+            ${{ runner.os }}-dolphin-submodules-
+
+      - name: Initialize and update submodules
+        run: |
+          git submodule update --init --recursive
+
+      # Cache build directory and CMake files
+      - name: Cache build directory and CMake files
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./build
+            ~/.cache
+          key: ${{ runner.os }}-dolphin-build-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-dolphin-build-
+
+      - name: Build for x86_64
+        run: |
+          mkdir -p build/out
           build_path="./build"
           out_path="./build/out"
           
-          git -c submodule."Externals/Qt".update=none \
-          -c submodule."Externals/FFmpeg-bin".update=none \
-          -c submodule."Externals/libadrenotools".update=none \
-          submodule update --init --recursive \
-          && git pull --recurse-submodules
-
           cmake -S . -B "$build_path" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="$out_path" \
-            -DCMAKE_CXX_FLAGS=-march=native \
-            -DCMAKE_C_FLAGS=-march=native \
+            -DCMAKE_CXX_FLAGS=-march=x86-64 \
+            -DCMAKE_C_FLAGS=-march=x86-64 \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
+            -DCMAKE_GENERATOR_PLATFORM=x86_64 \
             -DENABLE_ANALYTICS=OFF \
             -DENABLE_AUTOUPDATE=OFF \
             -DENABLE_BLUEZ=OFF \
@@ -57,13 +77,10 @@ jobs:
 
           ninja -C "$build_path" && ninja -C "$build_path" install
 
-          cp -r ./Data/Sys/ "$out_path"/Binaries/
+          touch "$out_path"/share/dolphin-emu/sys/portable.txt
 
-          touch "$out_path"/Binaries/portable.txt
-
-  
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dolphin-artifact 
-          path: ./build/out/ 
+          name: dolphin-artifact
+          path: ./build/out/
