@@ -61,7 +61,7 @@ jobs:
           out_path="./out"
 
           NUM_CPUS=$(nproc)
-          MAX_CORES=4  # Set a max number of cores to avoid overloading the system
+          MAX_CORES=2  # Set a max number of cores to avoid overloading the system
           CORES_TO_USE=$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
           
           echo "$NUM_CPUS"
@@ -83,7 +83,7 @@ jobs:
             -DUSE_RETRO_ACHIEVEMENTS=OFF \
             -GNinja
 
-          ninja -C "$build_path" && ninja -C "$build_path" install
+          ninja -C "$build_path" -j $CORES_TO_USE && ninja -C "$build_path" install
 
           touch "$out_path"/share/dolphin-emu/sys/portable.txt
 
