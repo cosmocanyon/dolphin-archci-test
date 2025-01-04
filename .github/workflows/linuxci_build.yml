@@ -1,0 +1,30 @@
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  build:
+    name: deploy standalone build for arch-linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup dev environment
+        run: |
+          sudo add-apt-repository ppa:okirby/qt6-backports && sudo apt update
+          sudo apt install build-essential git cmake ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libevdev-dev libusb-1.0-0-dev libxrandr-dev libxi-dev libpangocairo-1.0-0 qt6-base-private-dev libqt6svg6-dev libbluetooth-dev libasound2-dev libpulse-dev libgl1-mesa-dev libcurl4-openssl-dev
+          sudo apt install libudev-dev libsystemd-dev || sudo apt install libeudev-dev #distros without systemd like AntiX must use eudev instead
+          
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Build
+        run: |
+          ls
+          cd dolphin
+          ls
+  
