@@ -61,7 +61,7 @@ jobs:
           out_path="./out"
 
           NUM_CPUS=$(nproc)
-          MAX_CORES=3  # Set a max number of cores to avoid overloading the system
+          MAX_CORES=4  # Set a max number of cores to avoid overloading the system
           CORES_TO_USE=$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
           
           echo "$NUM_CPUS"
