@@ -43,8 +43,13 @@ jobs:
             -w /workspace \
             archlinux:base-devel bash -c "
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ninja ffmpeg libevdev libusb libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa curl \
-                systemd eudev
+                cmake ninja ffmpeg libevdev \
+                libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa \
+                yay -S eudev
+      
+                #curl libusb \
+                #systemd 
+                
                 
               mkdir ./build ./out &&
               build_path="./build"
