@@ -34,6 +34,10 @@ jobs:
           submodule update --init --recursive \
           && git pull --recurse-submodules
 
+      - name: Ensure build directory exists
+        run: |
+          mkdir -p ./build  # Create the build directory if it doesn't already exist
+
       - name: Cache CMake build and intermediate files
         uses: actions/cache@v4
         with:
