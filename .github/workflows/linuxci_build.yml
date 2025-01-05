@@ -10,13 +10,13 @@ on:
 jobs:
   build:
     name: Build Dolphin for x86_64
-    runs-on: ubuntu-latest  # You can use ubuntu-latest to ensure it's a 64-bit machine
+    runs-on: ubuntu-latest  # Ensures it's a 64-bit machine
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
-        # Cache submodules
+
+      # Cache submodules to speed up future builds
       - name: Cache Git submodules
         uses: actions/cache@v4
         with:
@@ -34,7 +34,7 @@ jobs:
           -c submodule."Externals/libadrenotools".update=none \
           submodule update --init --recursive \
           && git pull --recurse-submodules
-        
+
       - name: Docker for Arch
         run: |
           docker pull archlinux:base-devel
@@ -43,24 +43,26 @@ jobs:
             -w /workspace \
             archlinux:base-devel bash -c "
 
-              # Update and install official packages with pacman
+              # Update and install necessary packages
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa &&
-                        
-              mkdir build && mkdir out && 
-              build_path="./build"
-              out_path="./out"
+                cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa clang &&
+
+              # Create build and output directories
+              mkdir -p build out && 
+              build_path='./build'
+              out_path='./out'
               
-              NUM_CPUS=$(nproc)
+              NUM_CPUS=\$(nproc)
               MAX_CORES=4  # Set a max number of cores to avoid overloading the system
-              CORES_TO_USE=$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
+              CORES_TO_USE=\$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
+
+              echo \"Number of CPUs: \$NUM_CPUS\"
+              echo \"Using \$CORES_TO_USE cores for build\"
               
-              echo "$NUM_CPUS"
-              echo "$CORES_TO_USE"
-              
-              cmake -S . -B "$build_path" \
+              # Run cmake configuration
+              cmake -S . -B \"$build_path\" \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_INSTALL_PREFIX="$out_path" \
+                -DCMAKE_INSTALL_PREFIX=\"$out_path\" \
                 -DCMAKE_CXX_FLAGS=-march=x86-64 \
                 -DCMAKE_C_FLAGS=-march=x86-64 \
                 -DCMAKE_C_COMPILER=clang \
@@ -75,15 +77,17 @@ jobs:
                 -DUSE_SYSTEM_LIBS=OFF \
                 -GNinja
 
-              ninja -C "$build_path" -j $CORES_TO_USE && ninja -C "$build_path" install
-              
-              touch "$out_path/bin/portable.txt" # make it portable
-          
-              mv "$out_path/share/dolphin-emu" "$out_path"
-              mv "$out_path/dolphin-emu/sys" "$out_path/dolphin-emu/Sys" # yes, it's case sensitive, it installs with lowercase but needs Uppercase
-              mv "$out_path/bin"/* "$out_path/dolphin-emu/"
-              rmdir "$out_path/bin"
-                
+              # Build with Ninja
+              ninja -C \"$build_path\" -j \$CORES_TO_USE && ninja -C \"$build_path\" install
+
+              # Mark the build as portable
+              touch \"$out_path/bin/portable.txt\"
+
+              # Fix directory case sensitivity for Dolphin
+              mv \"$out_path/share/dolphin-emu\" \"$out_path\"
+              mv \"$out_path/dolphin-emu/sys\" \"$out_path/dolphin-emu/Sys\" # Case sensitivity fix for installation
+              mv \"$out_path/bin\"/* \"$out_path/dolphin-emu/\"
+              rmdir \"$out_path/bin\"
             "
 
       - name: Upload build artifact
