@@ -21,6 +21,7 @@ jobs:
         with:
           path: |
             ./.git/modules          # Cache submodule metadata (Git)
+            ./Externals/**/*
           key: ${{ runner.os }}-dolphin-submodules-${{ hashFiles('**/.gitmodules') }}  # Cache key based on .gitmodules
           restore-keys: |
             ${{ runner.os }}-dolphin-submodules-
