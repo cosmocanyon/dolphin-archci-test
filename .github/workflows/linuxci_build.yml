@@ -50,6 +50,9 @@ jobs:
               # Create build and output directories
               build_path="./build"
               out_path="./out"
+
+              echo "$build_path"
+              
               mkdir -p $build_path $out_path
 
               echo "$build_path"
