@@ -21,12 +21,13 @@ jobs:
         run: |
           mkdir -p ./build
           mkdir -p ./.git/modules
+          ls -la
 
       - name: Cache Git submodules
         uses: actions/cache@v4
         with:
           path: |
-            .git/modules          # Cache submodule metadata (Git)
+            ./.git/modules          # Cache submodule metadata (Git)
           key: ${{ runner.os }}-dolphin-submodules-${{ hashFiles('**/.gitmodules') }}  # Cache key based on .gitmodules
           restore-keys: |
             ${{ runner.os }}-dolphin-submodules-
