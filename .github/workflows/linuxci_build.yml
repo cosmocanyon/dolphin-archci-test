@@ -16,6 +16,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Initialize and update submodules
+        run: |
+          git -c submodule."Externals/Qt".update=none \
+          -c submodule."Externals/FFmpeg-bin".update=none \
+          -c submodule."Externals/libadrenotools".update=none \
+          submodule update --init --recursive \
+          && git pull --recurse-submodules
+
       # Cache submodules to speed up future builds
       - name: Cache Git submodules
         uses: actions/cache@v4
@@ -26,14 +34,6 @@ jobs:
           key: ${{ runner.os }}-dolphin-submodules-${{ hashFiles('**/.gitmodules') }}
           restore-keys: |
             ${{ runner.os }}-dolphin-submodules-
-
-      - name: Initialize and update submodules
-        run: |
-          git -c submodule."Externals/Qt".update=none \
-          -c submodule."Externals/FFmpeg-bin".update=none \
-          -c submodule."Externals/libadrenotools".update=none \
-          submodule update --init --recursive \
-          && git pull --recurse-submodules
 
       - name: Docker for Arch
         run: |
