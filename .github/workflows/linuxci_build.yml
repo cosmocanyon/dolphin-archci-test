@@ -13,19 +13,10 @@ jobs:
     runs-on: ubuntu-latest  # You can use ubuntu-latest to ensure it's a 64-bit machine
 
     steps:
-      - name: Setup dev environment
-        run: |
-          sudo apt update && sudo apt install -y build-essential \
-            git \
-            cmake \
-            ninja-build \
-            ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libevdev-dev libusb-1.0-0-dev libxrandr-dev libxi-dev libpangocairo-1.0-0 qt6-base-private-dev libqt6svg6-dev libbluetooth-dev libasound2-dev libpulse-dev libgl1-mesa-dev libcurl4-openssl-dev
-          sudo apt install -y libudev-dev libsystemd-dev || sudo apt install -y libeudev-dev
-
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # Cache submodules
+        
+        # Cache submodules
       - name: Cache Git submodules
         uses: actions/cache@v4
         with:
@@ -38,47 +29,63 @@ jobs:
 
       - name: Initialize and update submodules
         run: |
-          git submodule update --init --recursive
-
-      - name: Build for x86_64
+          git -c submodule."Externals/Qt".update=none \
+          -c submodule."Externals/FFmpeg-bin".update=none \
+          -c submodule."Externals/libadrenotools".update=none \
+          submodule update --init --recursive \
+          && git pull --recurse-submodules
+        
+      - name: Docker for Arch
         run: |
-          mkdir -p ./build ./out
-          build_path="./build"
-          out_path="./out"
+          docker pull archlinux:base-devel
+          docker run --rm \
+            -v $PWD:/workspace \
+            -w /workspace \
+            archlinux:base-devel bash -c 
+            "
+              pacman -Syu --noconfirm && pacman -S --noconfirm \
+              cmake ninja ffmpeg libevdev libusb libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa curl 
+              pacman -S --noconfirm systemd libudev || pacman -S --noconfirm eudev
+            
+              mkdir ./build ./out &&
+              build_path="./build"
+              out_path="./out"
+              
+              NUM_CPUS=$(nproc)
+              MAX_CORES=4  # Set a max number of cores to avoid overloading the system
+              CORES_TO_USE=$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
+              
+              echo "$NUM_CPUS"
+              echo "$CORES_TO_USE"
+              
+              cmake -S . -B "$build_path" \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX="$out_path" \
+                -DCMAKE_CXX_FLAGS=-march=x86-64 \
+                -DCMAKE_C_FLAGS=-march=x86-64 \
+                -DCMAKE_C_COMPILER=clang \
+                -DCMAKE_CXX_COMPILER=clang++ \
+                -DENABLE_ANALYTICS=OFF \
+                -DENABLE_AUTOUPDATE=OFF \
+                -DENABLE_BLUEZ=OFF \
+                -DENABLE_TESTS=OFF \
+                -DLINUX_LOCAL_DEV=ON \
+                -DUSE_DISCORD_PRESENCE=OFF \
+                -DUSE_RETRO_ACHIEVEMENTS=OFF \
+                -DUSE_SYSTEM_LIBS=OFF \
+                -GNinja
 
-          NUM_CPUS=$(nproc)
-          MAX_CORES=4  # Set a max number of cores to avoid overloading the system
-          CORES_TO_USE=$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
+              ninja -C "$build_path" -j $CORES_TO_USE && ninja -C "$build_path" install
+              
+              touch "$out_path/bin/portable.txt" # make it portable
           
-          echo "$NUM_CPUS"
-          echo "$CORES_TO_USE"
-          
-          cmake -S . -B "$build_path" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX="$out_path" \
-            -DCMAKE_CXX_FLAGS=-march=x86-64 \
-            -DCMAKE_C_FLAGS=-march=x86-64 \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DENABLE_ANALYTICS=OFF \
-            -DENABLE_AUTOUPDATE=OFF \
-            -DENABLE_BLUEZ=OFF \
-            -DENABLE_TESTS=OFF \
-            -DLINUX_LOCAL_DEV=ON \
-            -DUSE_DISCORD_PRESENCE=OFF \
-            -DUSE_RETRO_ACHIEVEMENTS=OFF \
-            -DUSE_SYSTEM_LIBS=OFF \
-            -GNinja
+              mv "$out_path/share/dolphin-emu" "$out_path"
+              mv "$out_path/dolphin-emu/sys" "$out_path/dolphin-emu/Sys" # yes, it's case sensitive, it installs with lowercase but needs Uppercase
+              mv "$out_path/bin"/* "$out_path/dolphin-emu/"
+              rmdir "$out_path/bin"
+                
+            "
 
-          ninja -C "$build_path" -j $CORES_TO_USE && ninja -C "$build_path" install
-          
-          touch "$out_path/bin/portable.txt" # make it portable
-          
-          mv "$out_path/share/dolphin-emu" "$out_path"
-          mv "$out_path/dolphin-emu/sys" "$out_path/dolphin-emu/Sys" # yes, it's case sensitive, it installs with lowercase but needs Uppercase
-          mv "$out_path/bin"/* "$out_path/dolphin-emu/"
-          rmdir "$out_path/bin"
-          
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
