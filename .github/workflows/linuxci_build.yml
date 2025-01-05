@@ -83,17 +83,11 @@ jobs:
               # Mark the build as portable
               touch \$out_path/bin/portable.txt
 
-              # Fix directory case sensitivity for Dolphin
               mv \$out_path/share/dolphin-emu \$out_path
               mv \$out_path/dolphin-emu/sys \$out_path/dolphin-emu/Sys # Case sensitivity fix for installation
               mv \$out_path/bin/* \$out_path/dolphin-emu/
               rmdir \$out_path/bin
             "
-            
-      # Step 4: Check if the build directory was populated (this step is just for debugging)
-      - name: Check build directory contents
-        run: |
-          ls -l ./build  # Check if build files exist after Docker run
             
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
