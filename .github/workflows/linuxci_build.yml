@@ -40,8 +40,8 @@ jobs:
           docker pull archlinux:base-devel
           docker run --rm \
             -v $PWD:/workspace \
-            -v $PWD/build:/workspace/build \  # Mount the build directory to persist it
-            -v $PWD/.git:/workspace/.git \  # Mount the .git directory to preserve submodule data
+            -v $PWD/build:/workspace/build \
+            -v $PWD/.git:/workspace/.git \
             -w /workspace \
             archlinux:base-devel bash -c "
 
