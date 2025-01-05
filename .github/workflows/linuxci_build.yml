@@ -20,7 +20,7 @@ jobs:
       - name: Ensure build directory exists
         run: |
           mkdir -p ./build
-          mkdir -p .git/modules
+          mkdir -p ./.git/modules
 
       - name: Cache Git submodules
         uses: actions/cache@v4
