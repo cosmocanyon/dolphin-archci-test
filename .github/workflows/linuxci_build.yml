@@ -50,9 +50,9 @@ jobs:
               # Create build and output directories
               build_path='./build'
               out_path='./out'
-              mkdir -p $build_pach $out_path
+              mkdir -p $build_path $out_path
 
-              echo "$build_path $out_path"
+              echo "$build_path"
                         
               NUM_CPUS=$(nproc)
               MAX_CORES=4  # Set a max number of cores to avoid overloading the system
