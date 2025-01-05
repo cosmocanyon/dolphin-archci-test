@@ -74,7 +74,7 @@ jobs:
 
           mv "$out_path/share/dolphin-emu" "$out_path"
           mv "$out_path/dolphin-emu/sys" "$out_path/dolphin-emu/Sys" # yes, it's case sensitive, it installs with lowercase but needs Uppercase
-          mv "$out_path/bin/*" "$out_path/dolphin-emu/"
+          mv "$out_path/bin"/* "$out_path/dolphin-emu/"
           rmdir bin
           touch "$out_path/dolphin-emu/portable.txt"
 
