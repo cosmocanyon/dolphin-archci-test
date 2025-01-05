@@ -42,8 +42,9 @@ jobs:
             -v $PWD:/workspace \
             -w /workspace \
             archlinux:base-devel bash -c "
-              pacman -Syu --noconfirm && pacman -S --noconfirm \
-              cmake ninja ffmpeg libevdev libusb libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa curl 
+              pacman -Syu --noconfirm \
+              pacman -S --noconfirm \
+              cmake ninja ffmpeg libevdev libusb libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa curl &&
               pacman -S --noconfirm systemd || pacman -S --noconfirm eudev
             
               mkdir ./build ./out &&
