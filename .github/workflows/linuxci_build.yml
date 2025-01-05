@@ -42,14 +42,18 @@ jobs:
             -v $PWD:/workspace \
             -w /workspace \
             archlinux:base-devel bash -c "
+              # Update and install official packages with pacman
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ninja ffmpeg libevdev \
-                libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa \
-                yay -S eudev
-      
-                #curl libusb \
-                #systemd 
-                
+                cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa curl
+              
+              # Install yay (AUR helper) if it's not already installed
+              pacman -S --noconfirm yay
+              
+              # Now install AUR packages with yay
+              yay -S --noconfirm eudev
+              
+              #curl libusb \
+              #systemd
                 
               mkdir ./build ./out &&
               build_path="./build"
