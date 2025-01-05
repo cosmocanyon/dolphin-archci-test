@@ -35,6 +35,15 @@ jobs:
           submodule update --init --recursive \
           && git pull --recurse-submodules
 
+      - name: Cache CMake build and intermediate files
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./build  # Cache the entire build directory
+          key: ${{ runner.os }}-dolphin-build-${{ hashFiles('**/*.cpp', '**/*.h', '**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-dolphin-build-
+
       - name: Docker for Arch
         run: |
           docker pull archlinux:base-devel
