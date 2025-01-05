@@ -46,10 +46,11 @@ jobs:
               # Update and install official packages with pacman
               pacman -Syu --noconfirm && pacman -S --noconfirm \
                 cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa 
-              ls          
-              mkdir ./build ./out &&
+                        
+              mkdir ./build ./out 
               build_path="./build"
               out_path="./out"
+              ls
               
               NUM_CPUS=$(nproc)
               MAX_CORES=4  # Set a max number of cores to avoid overloading the system
