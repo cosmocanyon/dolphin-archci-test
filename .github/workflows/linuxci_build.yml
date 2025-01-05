@@ -50,7 +50,7 @@ jobs:
               # Set up build and output directories
               build_path='./build'
               out_path='./out'
-              echo \"Build path: \$build_path\"
+
               mkdir -p \$build_path \$out_path
 
               NUM_CPUS=\$(nproc)
