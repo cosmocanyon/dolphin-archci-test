@@ -48,8 +48,8 @@ jobs:
                 cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa clang &&
 
               # Create build and output directories
-              build_path='./build'
-              out_path='./out'
+              build_path="./build"
+              out_path="./out"
               mkdir -p $build_path $out_path
 
               echo "$build_path"
