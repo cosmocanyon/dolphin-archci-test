@@ -16,12 +16,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 1: Ensure build directory exists (make sure it's created)
+      - name: Ensure build directory exists
+        run: |
+          ls
+          mkdir -p ./build
+          mkdit -p .git/modules
+
       - name: Cache Git submodules
         uses: actions/cache@v4
         with:
           path: |
             .git/modules          # Cache submodule metadata (Git)
-            .git/submodules       # Cache submodule metadata (Git)
           key: ${{ runner.os }}-dolphin-submodules-${{ hashFiles('**/.gitmodules') }}  # Cache key based on .gitmodules
           restore-keys: |
             ${{ runner.os }}-dolphin-submodules-
@@ -34,25 +40,11 @@ jobs:
           submodule update --init --recursive \
           && git pull --recurse-submodules
 
-      - name: Cache Git submodules
-        uses: actions/cache@v4
-        with:
-          path: |
-            .git/modules          # Cache submodule metadata (Git)
-            .git/submodules       # Cache submodule metadata (Git)
-          key: ${{ runner.os }}-dolphin-submodules-${{ hashFiles('**/.gitmodules') }}  # Cache key based on .gitmodules
-          restore-keys: |
-            ${{ runner.os }}-dolphin-submodules-
-
-      - name: Ensure build directory exists
-        run: |
-          mkdir -p ./build  # Create the build directory if it doesn't already exist
-
       - name: Cache CMake build and intermediate files
         uses: actions/cache@v4
         with:
           path: |
-            ./build  # Cache the entire build directory
+            ./build  
           key: ${{ runner.os }}-dolphin-build-${{ hashFiles('**/*.cpp', '**/*.h', '**/CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-dolphin-build-
@@ -114,14 +106,11 @@ jobs:
               mv \$out_path/bin/* \$out_path/dolphin-emu/
               rmdir \$out_path/bin
             "
-      - name: Cache CMake build and intermediate files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ./build  # Cache the entire build directory
-          key: ${{ runner.os }}-dolphin-build-${{ hashFiles('**/*.cpp', '**/*.h', '**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-dolphin-build-   
+            
+      # Step 4: Check if the build directory was populated (this step is just for debugging)
+      - name: Check build directory contents
+        run: |
+          ls -l ./build  # Check if build files exist after Docker run
             
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
