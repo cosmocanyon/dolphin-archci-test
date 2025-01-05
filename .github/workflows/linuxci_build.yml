@@ -48,21 +48,23 @@ jobs:
                 cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa clang &&
 
               # Create build and output directories
-              mkdir -p build out && 
               build_path='./build'
               out_path='./out'
-              
-              NUM_CPUS=\$(nproc)
-              MAX_CORES=4  # Set a max number of cores to avoid overloading the system
-              CORES_TO_USE=\$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
+              mkdir -p $build_pach $out_path
 
-              echo \"Number of CPUs: \$NUM_CPUS\"
-              echo \"Using \$CORES_TO_USE cores for build\"
+              echo "$build_path $out_path"
+                        
+              NUM_CPUS=$(nproc)
+              MAX_CORES=4  # Set a max number of cores to avoid overloading the system
+              CORES_TO_USE=$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
+
+              echo "Number of CPUs: $NUM_CPUS"
+              echo "Using $CORES_TO_USE cores for build"
               
               # Run cmake configuration
-              cmake -S . -B \"$build_path\" \
+              cmake -S . -B "$build_path" \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_INSTALL_PREFIX=\"$out_path\" \
+                -DCMAKE_INSTALL_PREFIX="$out_path" \
                 -DCMAKE_CXX_FLAGS=-march=x86-64 \
                 -DCMAKE_C_FLAGS=-march=x86-64 \
                 -DCMAKE_C_COMPILER=clang \
@@ -78,16 +80,16 @@ jobs:
                 -GNinja
 
               # Build with Ninja
-              ninja -C \"$build_path\" -j \$CORES_TO_USE && ninja -C \"$build_path\" install
+              ninja -C "$build_path" -j \$CORES_TO_USE && ninja -C "$build_path" install
 
               # Mark the build as portable
-              touch \"$out_path/bin/portable.txt\"
+              touch "$out_path/bin/portable.txt"
 
               # Fix directory case sensitivity for Dolphin
-              mv \"$out_path/share/dolphin-emu\" \"$out_path\"
-              mv \"$out_path/dolphin-emu/sys\" \"$out_path/dolphin-emu/Sys\" # Case sensitivity fix for installation
-              mv \"$out_path/bin\"/* \"$out_path/dolphin-emu/\"
-              rmdir \"$out_path/bin\"
+              mv "$out_path/share/dolphin-emu" "$out_path"
+              mv "$out_path/dolphin-emu/sys" "$out_path/dolphin-emu/Sys" # Case sensitivity fix for installation
+              mv "$out_path/bin"/* "$out_path/dolphin-emu/"
+              rmdir "$out_path/bin"
             "
 
       - name: Upload build artifact
