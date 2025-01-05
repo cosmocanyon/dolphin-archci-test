@@ -19,9 +19,8 @@ jobs:
       # Step 1: Ensure build directory exists (make sure it's created)
       - name: Ensure build directory exists
         run: |
-          ls
           mkdir -p ./build
-          mkdit -p .git/modules
+          mkdir -p .git/modules
 
       - name: Cache Git submodules
         uses: actions/cache@v4
