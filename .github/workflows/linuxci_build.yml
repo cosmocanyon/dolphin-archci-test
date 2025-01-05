@@ -16,6 +16,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Cache Git submodules
+        uses: actions/cache@v4
+        with:
+          path: |
+            .git/modules          # Cache submodule metadata (Git)
+            .git/submodules       # Cache submodule metadata (Git)
+          key: ${{ runner.os }}-dolphin-submodules-${{ hashFiles('**/.gitmodules') }}  # Cache key based on .gitmodules
+          restore-keys: |
+            ${{ runner.os }}-dolphin-submodules-
+
       - name: Initialize and update submodules
         run: |
           git -c submodule."Externals/Qt".update=none \
@@ -24,16 +34,14 @@ jobs:
           submodule update --init --recursive \
           && git pull --recurse-submodules
 
-      # Cache submodules to speed up future builds
-      - name: Cache Git submodules
+      - name: Cache CMake build and intermediate files
         uses: actions/cache@v4
         with:
           path: |
-            .git/modules
-            .git/submodules
-          key: ${{ runner.os }}-dolphin-submodules-${{ hashFiles('**/.gitmodules') }}
+            ./build  # Cache the entire build directory
+          key: ${{ runner.os }}-dolphin-build-${{ hashFiles('**/*.cpp', '**/*.h', '**/CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-dolphin-submodules-
+            ${{ runner.os }}-dolphin-build-
 
       - name: Docker for Arch
         run: |
@@ -92,16 +100,7 @@ jobs:
               mv \$out_path/bin/* \$out_path/dolphin-emu/
               rmdir \$out_path/bin
             "
-            
-      - name: Cache CMake build and intermediate files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ./build  # Cache the entire build directory
-          key: ${{ runner.os }}-dolphin-build-${{ hashFiles('**/*.cpp', '**/*.h', '**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-dolphin-build-
-            
+                      
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
