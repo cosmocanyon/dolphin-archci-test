@@ -81,6 +81,7 @@ jobs:
             -DLINUX_LOCAL_DEV=ON \
             -DUSE_DISCORD_PRESENCE=OFF \
             -DUSE_RETRO_ACHIEVEMENTS=OFF \
+            -DUSE_SYSTEM_LIBS=OFF \
             -GNinja
 
           ninja -C "$build_path" -j $CORES_TO_USE && ninja -C "$build_path" install
