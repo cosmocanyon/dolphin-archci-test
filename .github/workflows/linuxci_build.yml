@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ./build
+            #./build
             ~/.cache
           key: ${{ runner.os }}-dolphin-build-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
