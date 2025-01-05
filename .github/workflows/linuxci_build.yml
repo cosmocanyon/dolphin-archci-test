@@ -45,9 +45,9 @@ jobs:
               ls
               # Update and install official packages with pacman
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa 
+                cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa &&
                         
-              mkdir ./build ./out 
+              mkdir build && mkdir out && 
               build_path="./build"
               out_path="./out"
               ls
