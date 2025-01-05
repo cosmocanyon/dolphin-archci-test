@@ -43,17 +43,6 @@ jobs:
               -c submodule."Externals/libadrenotools".update=none \
               submodule update --init --recursive
 
-      # Cache build directory and CMake files
-      - name: Cache build directory and CMake files
-        uses: actions/cache@v4
-        with:
-          path: |
-            #./build
-            ~/.cache
-          key: ${{ runner.os }}-dolphin-build-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-dolphin-build-
-
       - name: Build for x86_64
         run: |
           mkdir -p ./build ./out
