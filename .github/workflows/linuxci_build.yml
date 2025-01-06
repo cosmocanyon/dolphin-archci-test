@@ -67,8 +67,8 @@ jobs:
 
               # Set ccache configuration
               export PATH=/usr/lib/ccache:$PATH &&
-              export CC='ccache clang' &&
-              export CXX='ccache clang++'
+              #export CC='ccache clang' &&
+              #export CXX='ccache clang++'
 
               # Run cmake configuration
               cmake -S . -B \$build_path \
@@ -76,6 +76,8 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=\$out_path \
                 -DCMAKE_CXX_FLAGS=-march=x86-64 \
                 -DCMAKE_C_FLAGS=-march=x86-64 \
+                -DCMAKE_C_COMPILER=gcc \
+                -DCMAKE_CXX_COMPILER=g++ \
                 -DENABLE_ANALYTICS=OFF \
                 -DENABLE_AUTOUPDATE=OFF \
                 -DENABLE_BLUEZ=OFF \
