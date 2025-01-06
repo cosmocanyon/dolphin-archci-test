@@ -65,13 +65,6 @@ jobs:
 
               mkdir -p \$build_path \$out_path
 
-              NUM_CPUS=\$(nproc)
-              MAX_CORES=4  # Set a max number of cores to avoid overloading the system
-              CORES_TO_USE=\$((NUM_CPUS < MAX_CORES ? NUM_CPUS : MAX_CORES))
-
-              echo \"Number of CPUs: \$NUM_CPUS\"
-              echo \"Using \$CORES_TO_USE cores for build\"
-
               # Set ccache configuration
               export PATH=/usr/lib/ccache:$PATH &&
               export CC='ccache gcc' &&
@@ -94,7 +87,7 @@ jobs:
                 -GNinja
 
               # Build with Ninja
-              ninja -C \$build_path -j \$CORES_TO_USE && ninja -C \$build_path install
+              ninja -C \$build_path && ninja -C \$build_path install
 
               # Mark the build as portable
               touch \$out_path/bin/portable.txt
