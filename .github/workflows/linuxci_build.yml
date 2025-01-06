@@ -28,11 +28,7 @@ jobs:
 
       - name: Initialize and update submodules
         run: |
-          git -c submodule."Externals/Qt".update=none \
-          -c submodule."Externals/FFmpeg-bin".update=none \
-          -c submodule."Externals/libadrenotools".update=none \
-          submodule update --init --recursive \
-          && git pull --recurse-submodules
+          git submodule update --init --recursive
 
       - name: Docker for Arch
         run: |
