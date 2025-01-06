@@ -53,7 +53,7 @@ jobs:
 
               # Update and install necessary packages
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa clang &&
+                cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa ccache &&
 
               # Set up build and output directories
               build_path='./build'
