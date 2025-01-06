@@ -67,9 +67,9 @@ jobs:
 
               # Set ccache configuration
               export PATH=/usr/lib/ccache:$PATH &&
-              export CC='ccache gcc' &&
-              export CXX='ccache g++' &&
-              
+              export CC='ccache clang' &&
+              export CXX='ccache clang++'
+
               # Run cmake configuration
               cmake -S . -B \$build_path \
                 -DCMAKE_BUILD_TYPE=Release \
