@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     name: Build Dolphin for x86_64
-    runs-on: ubuntu-latest  # Ensures it's a 64-bit machine
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -54,21 +54,16 @@ jobs:
             -w /workspace \
             -e CCACHE_DIR=/workspace/.ccache \
             archlinux:base-devel bash -c "
-
+            
               # Update and install necessary packages
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ninja ffmpeg libevdev libxrandr libxi pango cairo qt6-base qt6-svg bluez alsa-lib pulseaudio mesa ccache clang &&
-
+                cmake ninja ffmpeg libxrandr libxi libevdev alsa-lib qt6-base qt6-svg ccache &&
+                # bluez pango cairo pulseaudio mesa\
+              
               # Set up build and output directories
               build_path='./build'
               out_path='./out'
-
               mkdir -p \$build_path \$out_path
-
-              # Set ccache configuration
-              #export PATH=/usr/lib/ccache:$PATH &&
-              #export CC='ccache clang' &&
-              #export CXX='ccache clang++'
 
               # Run cmake configuration
               cmake -S . -B \$build_path \
@@ -93,11 +88,11 @@ jobs:
 
               # Mark the build as portable
               touch \$out_path/bin/portable.txt
-
               mv \$out_path/share/dolphin-emu \$out_path
               mv \$out_path/dolphin-emu/sys \$out_path/dolphin-emu/Sys # Case sensitivity fix for installation
               mv \$out_path/bin/* \$out_path/dolphin-emu/
               rmdir \$out_path/bin
+              
             "
             
       - name: Upload build artifact
