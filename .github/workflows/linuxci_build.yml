@@ -15,10 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Cache Git submodules
+        id: cache-submodules
         uses: actions/cache@v4
         with:
           path: |
@@ -29,6 +28,7 @@ jobs:
             ${{ runner.os }}-dolphin-submodules-
 
       - name: Initialize and update submodules
+        if: steps.cache-submodules.outputs.cache-hit != 'true'
         run: |
           git submodule update --init --recursive
 
