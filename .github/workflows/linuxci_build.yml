@@ -30,7 +30,11 @@ jobs:
       - name: Initialize and update submodules
         if: steps.cache-submodules.outputs.cache-hit != 'true'
         run: |
-          git submodule update --init --recursive
+          git -c submodule."Externals/Qt".update=none \
+          -c submodule."Externals/FFmpeg-bin".update=none \
+          -c submodule."Externals/libadrenotools".update=none \
+          submodule update --init --recursive \
+          && git pull --recurse-submodules
 
       - name: Cache ccache directory
         id: cache-ccache
