@@ -57,7 +57,7 @@ jobs:
             
               # Update and install necessary packages
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ninja ffmpeg libxrandr libxi libevdev alsa-lib qt6-base qt6-svg ccache minizip &&
+                cmake ninja ffmpeg libxrandr libxi libevdev alsa-lib qt6-base qt6-svg ccache &&
                 # bluez pango cairo pulseaudio mesa\
               
               # Set up build and output directories
