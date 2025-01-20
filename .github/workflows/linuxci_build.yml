@@ -80,7 +80,8 @@ jobs:
                 -DLINUX_LOCAL_DEV=ON \
                 -DUSE_DISCORD_PRESENCE=OFF \
                 -DUSE_RETRO_ACHIEVEMENTS=OFF \
-                -DUSE_SYSTEM_LIBS=OFF \
+                -DUSE_SYSTEM_LIBS=AUTO \
+                -DUSE_SYSTEM_MINIZIP=ON \
                 -GNinja
 
               # Build with Ninja
