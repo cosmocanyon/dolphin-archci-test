@@ -696,11 +696,6 @@ if (APPLE OR WIN32)
   include_directories(Externals/ed25519)
 endif()
 
-# Using static soundtouch from Externals
-# Unable to use system soundtouch library: We require shorts, not floats.
-add_subdirectory(Externals/soundtouch)
-include_directories(Externals/soundtouch)
-
 if(ENABLE_CUBEB)
   dolphin_find_optional_system_library(CUBEB Externals/cubeb)
   add_definitions(-DHAVE_CUBEB)
@@ -713,7 +708,7 @@ if(NOT ANDROID)
   add_definitions(-D__LIBUSB__)
 endif()
 
-dolphin_find_optional_system_library(SFML Externals/SFML 2.1 COMPONENTS network system)
+dolphin_find_optional_system_library(SFML Externals/SFML 3.0 COMPONENTS Network System)
 
 if(USE_UPNP)
   dolphin_find_optional_system_library(MINIUPNPC Externals/miniupnpc 1.6)

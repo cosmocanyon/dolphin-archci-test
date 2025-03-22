@@ -533,9 +533,9 @@ class SettingsFragmentPresenter(
         sl.add(
             SwitchSetting(
                 context,
-                BooleanSetting.MAIN_AUDIO_STRETCH,
-                R.string.audio_stretch,
-                R.string.audio_stretch_description
+                BooleanSetting.MAIN_AUDIO_FILL_GAPS,
+                R.string.audio_fill_gaps,
+                R.string.audio_fill_gaps_description
             )
         )
         sl.add(
@@ -1972,8 +1972,8 @@ class SettingsFragmentPresenter(
             ) { SettingsAdapter.clearLog() })
 
         sl.add(HeaderSetting(context, R.string.log_types, 0))
-        for ((key, value) in LOG_TYPE_NAMES) {
-            sl.add(LogSwitchSetting(key, value, ""))
+        for (logType in LOG_TYPE_NAMES) {
+            sl.add(LogSwitchSetting(logType.first, logType.second, ""))
         }
     }
 
@@ -2504,11 +2504,11 @@ class SettingsFragmentPresenter(
     fun setAllLogTypes(value: Boolean) {
         val settings = fragmentView.settings
 
-        for ((key) in LOG_TYPE_NAMES) {
+        for (logType in LOG_TYPE_NAMES) {
             AdHocBooleanSetting(
                 Settings.FILE_LOGGER,
                 Settings.SECTION_LOGGER_LOGS,
-                key,
+                logType.first,
                 false
             ).setBoolean(settings!!, value)
         }
