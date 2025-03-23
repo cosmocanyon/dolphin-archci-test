@@ -73,13 +73,13 @@ jobs:
                 -DCMAKE_C_FLAGS=-march=x86-64 \
                 -DCMAKE_C_COMPILER="gcc" \
                 -DCMAKE_CXX_COMPILER="g++" \
-                -DENABLE_ANALYTICS=OFF \
-                -DENABLE_AUTOUPDATE=OFF \
-                -DENABLE_BLUEZ=OFF \
-                -DENABLE_TESTS=OFF \
-                -DLINUX_LOCAL_DEV=ON \
-                -DUSE_DISCORD_PRESENCE=OFF \
-                -DUSE_RETRO_ACHIEVEMENTS=OFF \
+                -DENABLE_ANALYTICS=false \
+                -DENABLE_AUTOUPDATE=false \
+                -DENABLE_BLUEZ=false \
+                -DENABLE_TESTS=false \
+                -DLINUX_LOCAL_DEV=true \
+                -DUSE_DISCORD_PRESENCE=false \
+                -DUSE_RETRO_ACHIEVEMENTS=false \
                 -DUSE_SYSTEM_LIBS=AUTO \
                 -GNinja
 
