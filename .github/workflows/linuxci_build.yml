@@ -67,6 +67,7 @@ jobs:
 
               # Run cmake configuration
               cmake -S . -B \$build_path \
+                -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=\$out_path \
                 -DCMAKE_CXX_FLAGS=-march=x86-64 \
