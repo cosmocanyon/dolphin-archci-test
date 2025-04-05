@@ -72,8 +72,8 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=\$out_path \
                 -DCMAKE_CXX_FLAGS=-march=x86-64 \
                 -DCMAKE_C_FLAGS=-march=x86-64 \
-                -DCMAKE_C_COMPILER="clang" \
-                -DCMAKE_CXX_COMPILER="clang++" \
+                -DCMAKE_C_COMPILER="gcc" \
+                -DCMAKE_CXX_COMPILER="g++" \
                 -DENABLE_ANALYTICS=false \
                 -DENABLE_AUTOUPDATE=false \
                 -DENABLE_BLUEZ=false \
