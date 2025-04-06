@@ -80,8 +80,11 @@ jobs:
                 -DENABLE_TESTS=false \
                 -DLINUX_LOCAL_DEV=true \
                 -DUSE_DISCORD_PRESENCE=false \
-                -DUSE_RETRO_ACHIEVEMENTS=false \
-                -DUSE_SYSTEM_LIBS=AUTO \
+                -DUSE_RETRO_ACHIEVEMENTS=true \
+                -DUSE_SYSTEM_LIBS=ON \
+                -DUSE_SYSTEM_MINIZIP=AUTO \
+                -DUSE_SYSTEM_CUBEB=AUTO \
+                -DUSE_SYSTEM_LIBMGBA=AUTO \
                 -GNinja
 
               # Build with Ninja
