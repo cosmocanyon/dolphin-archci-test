@@ -57,7 +57,7 @@ jobs:
             
               # Update and install necessary packages
               pacman -Syu --noconfirm && pacman -S --noconfirm \
-                cmake ccache alsa-lib bluez-libs bzip2 enet gcc-libs glibc hicolor-icon-theme hidapi ffmpeg curl libevdev libglvnd miniupnpc libpulse libspng systemd-libs libusb libx11 libxi libxrandr lz4 lzo mbedtls2 pugixml qt6-base qt6-svg sdl2-compat speexdsp xxhash xz zstd pulseaudio git ninja python &&
+                cmake ccache alsa-lib bluez-libs bzip2 enet gcc-libs glibc hicolor-icon-theme hidapi ffmpeg curl libevdev libglvnd miniupnpc libpulse libspng systemd-libs libusb libx11 libxi libxrandr lz4 lzo mbedtls2 pugixml qt6-base qt6-svg sdl2-compat speexdsp xxhash xz zstd pulseaudio git ninja python sfml &&
                 # bluez pango cairo pulseaudio mesa\
               
               # Set up build and output directories
