@@ -368,7 +368,7 @@ void ZeldaUCode::HandleMailLight(u32 mail)
     m_sync_max_voice_id = 0xFFFFFFFF;
     m_sync_voice_skip_flags.fill(0xFFFF);
     RenderAudio();
-    m_dsphle->GetSystem().GetDSP().GenerateDSPInterruptFromDSPEmu(DSP::INT_DSP);
+    m_dsphle->GetSystem().GetDSP().GenerateDSPInterruptFromDSPEmu(INT_DSP);
     break;
 
   case MailState::HALTED:
@@ -1114,7 +1114,7 @@ void ZeldaAudioRenderer::ApplyReverb(bool post_rendering)
       for (u16 i = 0; i < 8; ++i)
         (*last8_samples_buffers[rpb_idx])[i] = buffer[0x50 + i];
 
-      auto ApplyFilter = [&]() {
+      auto ApplyFilter = [&] {
         // Filter the buffer using provided coefficients.
         for (u16 i = 0; i < 0x50; ++i)
         {

@@ -269,6 +269,7 @@ extern const Info<bool> MAIN_GAMELIST_LIST_WAD;
 extern const Info<bool> MAIN_GAMELIST_LIST_ELF_DOL;
 extern const Info<bool> MAIN_GAMELIST_LIST_WII;
 extern const Info<bool> MAIN_GAMELIST_LIST_GC;
+extern const Info<bool> MAIN_GAMELIST_LIST_TRI;
 extern const Info<bool> MAIN_GAMELIST_LIST_JPN;
 extern const Info<bool> MAIN_GAMELIST_LIST_PAL;
 extern const Info<bool> MAIN_GAMELIST_LIST_USA;
@@ -352,6 +353,7 @@ extern const Info<std::string> MAIN_BLUETOOTH_PASSTHROUGH_LINK_KEYS;
 
 // Main.USBPassthrough
 
+extern const Info<bool> MAIN_USB_PASSTHROUGH_DISGUISE_PLAYSTATION_AS_WII;
 extern const Info<std::string> MAIN_USB_PASSTHROUGH_DEVICES;
 std::set<std::pair<u16, u16>> GetUSBDeviceWhitelist();
 void SetUSBDeviceWhitelist(const std::set<std::pair<u16, u16>>& devices);
