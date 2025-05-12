@@ -23,6 +23,7 @@
 #include <rcheevos/include/rc_api_runtime.h>
 #include <rcheevos/include/rc_api_user.h>
 #include <rcheevos/include/rc_client.h>
+#include <rcheevos/include/rc_hash.h>
 #include <rcheevos/include/rc_runtime.h>
 
 #include "Common/CommonTypes.h"
@@ -75,6 +76,9 @@ public:
   using RichPresence = std::array<char, RP_SIZE>;
   using Badge = VideoCommon::CustomTextureData::ArraySlice::Level;
   static constexpr size_t MAX_DISPLAYED_LBOARDS = 4;
+  // This is hardcoded to 24MiB because rcheevos currently hardcodes it to 24MiB.
+  static constexpr u32 MEM1_SIZE = 0x01800000;
+  static constexpr u32 MEM2_START = 0x10000000;
 
   static constexpr std::string_view DEFAULT_PLAYER_BADGE_FILENAME = "achievements_player.png";
   static constexpr std::string_view DEFAULT_GAME_BADGE_FILENAME = "achievements_game.png";
@@ -122,7 +126,7 @@ public:
   void SetUpdateCallback(UpdateCallback callback);
   void Login(const std::string& password);
   bool HasAPIToken() const;
-  void LoadGame(const std::string& file_path, const DiscIO::Volume* volume);
+  void LoadGame(const DiscIO::Volume* volume);
   bool IsGameLoaded() const;
   void SetBackgroundExecutionAllowed(bool allowed);
 
@@ -193,12 +197,13 @@ private:
 
   static picojson::value LoadApprovedList();
 
-  static void* FilereaderOpenByFilepath(const char* path_utf8);
-  static void* FilereaderOpenByVolume(const char* path_utf8);
+  static void* FilereaderOpen(const char* path_utf8);
   static void FilereaderSeek(void* file_handle, int64_t offset, int origin);
   static int64_t FilereaderTell(void* file_handle);
   static size_t FilereaderRead(void* file_handle, void* buffer, size_t requested_bytes);
   static void FilereaderClose(void* file_handle);
+
+  static u32 FindConsoleID(const DiscIO::Platform& platform);
 
   void LoadDefaultBadges();
   static void LoginCallback(int result, const char* error_message, rc_client_t* client,
@@ -299,8 +304,8 @@ private:
   std::string m_title_estimate;
 #endif  // RC_CLIENT_SUPPORTS_RAINTEGRATION
 
-  Common::WorkQueueThread<std::function<void()>> m_queue;
-  Common::WorkQueueThread<std::function<void()>> m_image_queue;
+  Common::AsyncWorkThread m_queue;
+  Common::AsyncWorkThread m_image_queue;
   mutable std::recursive_mutex m_lock;
   std::recursive_mutex m_filereader_lock;
 };  // class AchievementManager
@@ -349,7 +354,7 @@ public:
     return true;
   }
 
-  constexpr void LoadGame(const std::string&, const DiscIO::Volume*) {}
+  constexpr void LoadGame(const DiscIO::Volume*) {}
 
   constexpr void SetBackgroundExecutionAllowed(bool allowed) {}
 

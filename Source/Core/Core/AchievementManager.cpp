@@ -11,7 +11,6 @@
 #include <fmt/format.h>
 
 #include <rcheevos/include/rc_api_info.h>
-#include <rcheevos/include/rc_hash.h>
 
 #include "Common/Assert.h"
 #include "Common/BitUtils.h"
@@ -78,9 +77,8 @@ void AchievementManager::Init(void* hwnd)
                              });
     m_config_changed_callback_id = Config::AddConfigChangedCallback([this] { SetHardcoreMode(); });
     SetHardcoreMode();
-    m_queue.Reset("AchievementManagerQueue", [](const std::function<void()>& func) { func(); });
-    m_image_queue.Reset("AchievementManagerImageQueue",
-                        [](const std::function<void()>& func) { func(); });
+    m_queue.Reset("AchievementManagerQueue");
+    m_image_queue.Reset("AchievementManagerImageQueue");
 
 #ifdef RC_CLIENT_SUPPORTS_RAINTEGRATION
     // Attempt to load the integration DLL from the directory containing the main client executable.
@@ -161,13 +159,13 @@ bool AchievementManager::HasAPIToken() const
   return !Config::Get(Config::RA_API_TOKEN).empty();
 }
 
-void AchievementManager::LoadGame(const std::string& file_path, const DiscIO::Volume* volume)
+void AchievementManager::LoadGame(const DiscIO::Volume* volume)
 {
   if (!Config::Get(Config::RA_ENABLED) || !HasAPIToken())
   {
     return;
   }
-  if (file_path.empty() && volume == nullptr)
+  if (volume == nullptr)
   {
     WARN_LOG_FMT(ACHIEVEMENTS, "Called Load Game without a game.");
     return;
@@ -184,20 +182,22 @@ void AchievementManager::LoadGame(const std::string& file_path, const DiscIO::Vo
   {
     std::lock_guard lg{m_lock};
 #ifdef RC_CLIENT_SUPPORTS_RAINTEGRATION
-    SplitPath(file_path, nullptr, &m_title_estimate, nullptr);
+    const auto& names = volume->GetLongNames();
+    if (names.contains(DiscIO::Language::English))
+      m_title_estimate = names.at(DiscIO::Language::English);
+    else if (!names.empty())
+      m_title_estimate = names.begin()->second;
+    else
+      m_title_estimate = "";
 #endif  // RC_CLIENT_SUPPORTS_RAINTEGRATION
-    if (volume)
+    if (!m_loading_volume)
     {
-      if (!m_loading_volume)
-      {
-        m_loading_volume = DiscIO::CreateVolume(volume->GetBlobReader().CopyReader());
-      }
+      m_loading_volume = DiscIO::CreateVolume(volume->GetBlobReader().CopyReader());
     }
   }
   std::lock_guard lg{m_filereader_lock};
   rc_hash_filereader volume_reader{
-      .open = (volume) ? &AchievementManager::FilereaderOpenByVolume :
-                         &AchievementManager::FilereaderOpenByFilepath,
+      .open = &AchievementManager::FilereaderOpen,
       .seek = &AchievementManager::FilereaderSeek,
       .tell = &AchievementManager::FilereaderTell,
       .read = &AchievementManager::FilereaderRead,
@@ -206,13 +206,14 @@ void AchievementManager::LoadGame(const std::string& file_path, const DiscIO::Vo
   rc_hash_init_custom_filereader(&volume_reader);
   if (rc_client_get_game_info(m_client))
   {
-    rc_client_begin_change_media(m_client, file_path.c_str(), NULL, 0, ChangeMediaCallback, NULL);
+    rc_client_begin_change_media(m_client, "", NULL, 0, ChangeMediaCallback, NULL);
   }
   else
   {
+    u32 console_id = FindConsoleID(volume->GetVolumeType());
     rc_client_set_read_memory_function(m_client, MemoryVerifier);
-    rc_client_begin_identify_and_load_game(m_client, RC_CONSOLE_GAMECUBE, file_path.c_str(), NULL,
-                                           0, LoadGameCallback, NULL);
+    rc_client_begin_identify_and_load_game(m_client, console_id, "", NULL, 0, LoadGameCallback,
+                                           NULL);
   }
 }
 
@@ -237,15 +238,17 @@ void AchievementManager::SetBackgroundExecutionAllowed(bool allowed)
 std::string AchievementManager::CalculateHash(const std::string& file_path)
 {
   char hash_result[33] = "0";
+  GetInstance().m_loading_volume = DiscIO::CreateVolume(file_path);
   rc_hash_filereader volume_reader{
-      .open = &AchievementManager::FilereaderOpenByFilepath,
+      .open = &AchievementManager::FilereaderOpen,
       .seek = &AchievementManager::FilereaderSeek,
       .tell = &AchievementManager::FilereaderTell,
       .read = &AchievementManager::FilereaderRead,
       .close = &AchievementManager::FilereaderClose,
   };
   rc_hash_init_custom_filereader(&volume_reader);
-  rc_hash_generate_from_file(hash_result, RC_CONSOLE_GAMECUBE, file_path.c_str());
+  u32 console_id = FindConsoleID(GetInstance().m_loading_volume->GetVolumeType());
+  rc_hash_generate_from_file(hash_result, console_id, file_path.c_str());
 
   return std::string(hash_result);
 }
@@ -326,10 +329,11 @@ void AchievementManager::DoFrame()
       if (!system)
         return;
       Core::CPUThreadGuard thread_guard(*system);
-      u32 ram_size = system->GetMemory().GetRamSizeReal();
-      if (m_cloned_memory.size() != ram_size)
-        m_cloned_memory.resize(ram_size);
-      system->GetMemory().CopyFromEmu(m_cloned_memory.data(), 0, m_cloned_memory.size());
+      u32 mem2_size = system->GetMemory().GetExRamSizeReal();
+      if (m_cloned_memory.size() != MEM1_SIZE + mem2_size)
+        m_cloned_memory.resize(MEM1_SIZE + mem2_size);
+      system->GetMemory().CopyFromEmu(m_cloned_memory.data(), 0, MEM1_SIZE);
+      system->GetMemory().CopyFromEmu(m_cloned_memory.data() + MEM1_SIZE, MEM2_START, mem2_size);
     }
 #endif  // RC_CLIENT_SUPPORTS_RAINTEGRATION
     std::lock_guard lg{m_lock};
@@ -715,6 +719,8 @@ void AchievementManager::DoState(PointerWrap& p)
 
 void AchievementManager::CloseGame()
 {
+  m_queue.Cancel();
+  m_image_queue.Cancel();
   {
     std::lock_guard lg{m_lock};
     m_active_challenges.clear();
@@ -726,8 +732,6 @@ void AchievementManager::CloseGame()
     m_locked_badges.clear();
     m_leaderboard_map.clear();
     m_rich_presence.fill('\0');
-    m_queue.Cancel();
-    m_image_queue.Cancel();
     m_system.store(nullptr, std::memory_order_release);
     if (Config::Get(Config::RA_DISCORD_PRESENCE_ENABLED))
       Discord::UpdateDiscordPresence();
@@ -774,16 +778,7 @@ void AchievementManager::Shutdown()
   }
 }
 
-void* AchievementManager::FilereaderOpenByFilepath(const char* path_utf8)
-{
-  auto state = std::make_unique<FilereaderState>();
-  state->volume = DiscIO::CreateVolume(path_utf8);
-  if (!state->volume)
-    return nullptr;
-  return state.release();
-}
-
-void* AchievementManager::FilereaderOpenByVolume(const char* path_utf8)
+void* AchievementManager::FilereaderOpen(const char* path_utf8)
 {
   auto state = std::make_unique<FilereaderState>();
   {
@@ -836,6 +831,20 @@ size_t AchievementManager::FilereaderRead(void* file_handle, void* buffer, size_
 void AchievementManager::FilereaderClose(void* file_handle)
 {
   delete static_cast<FilereaderState*>(file_handle);
+}
+
+u32 AchievementManager::FindConsoleID(const DiscIO::Platform& platform)
+{
+  switch (platform)
+  {
+  case DiscIO::Platform::GameCubeDisc:
+    return RC_CONSOLE_GAMECUBE;
+  case DiscIO::Platform::WiiDisc:
+  case DiscIO::Platform::WiiWAD:
+    return RC_CONSOLE_WII;
+  default:
+    return RC_CONSOLE_UNKNOWN;
+  }
 }
 
 void AchievementManager::LoadDefaultBadges()
@@ -997,6 +1006,7 @@ void AchievementManager::LoadGameCallback(int result, const char* error_message,
       // Allow developer tools for unidentified games
       rc_client_set_read_memory_function(instance.m_client, MemoryPeeker);
       instance.m_system.store(&Core::System::GetInstance(), std::memory_order_release);
+      return;
     }
     instance.CloseGame();
     return;
@@ -1258,7 +1268,7 @@ void AchievementManager::Request(const rc_api_request_t* request,
 {
   std::string url = request->url;
   std::string post_data = request->post_data;
-  AchievementManager::GetInstance().m_queue.EmplaceItem(
+  AchievementManager::GetInstance().m_queue.Push(
       [url = std::move(url), post_data = std::move(post_data), callback = std::move(callback),
        callback_data = std::move(callback_data)] {
         Common::HttpRequest http_request;
@@ -1307,10 +1317,10 @@ void AchievementManager::Request(const rc_api_request_t* request,
 u32 AchievementManager::MemoryVerifier(u32 address, u8* buffer, u32 num_bytes, rc_client_t* client)
 {
   auto& system = Core::System::GetInstance();
-  u32 ram_size = system.GetMemory().GetRamSizeReal();
-  if (address >= ram_size)
-    return 0;
-  return std::min(ram_size - address, num_bytes);
+  u32 mem2_size = system.GetMemory().GetExRamSizeReal();
+  if (address < MEM1_SIZE + mem2_size)
+    return std::min(MEM1_SIZE + mem2_size - address, num_bytes);
+  return 0;
 }
 
 u32 AchievementManager::MemoryPeeker(u32 address, u8* buffer, u32 num_bytes, rc_client_t* client)
@@ -1341,6 +1351,8 @@ u32 AchievementManager::MemoryPeeker(u32 address, u8* buffer, u32 num_bytes, rc_
     return 0;
   }
   Core::CPUThreadGuard thread_guard(system);
+  if (address > MEM1_SIZE)
+    address += (MEM2_START - MEM1_SIZE);
   for (u32 num_read = 0; num_read < num_bytes; num_read++)
   {
     auto value = system.GetMMU().HostTryReadU8(thread_guard, address + num_read,
@@ -1354,7 +1366,7 @@ u32 AchievementManager::MemoryPeeker(u32 address, u8* buffer, u32 num_bytes, rc_
 
 void AchievementManager::FetchBadge(AchievementManager::Badge* badge, u32 badge_type,
                                     const AchievementManager::BadgeNameFunction function,
-                                    const UpdatedItems callback_data)
+                                    UpdatedItems callback_data)
 {
   if (!m_client || !HasAPIToken())
   {
@@ -1364,8 +1376,8 @@ void AchievementManager::FetchBadge(AchievementManager::Badge* badge, u32 badge_
     return;
   }
 
-  m_image_queue.EmplaceItem([this, badge, badge_type, function = std::move(function),
-                             callback_data = std::move(callback_data)] {
+  m_image_queue.Push([this, badge, badge_type, function = std::move(function),
+                      callback_data = std::move(callback_data)] {
     Common::ScopeGuard on_end_scope([&]() {
       if (m_display_welcome_message && badge_type == RC_IMAGE_TYPE_GAME)
         DisplayWelcomeMessage();
@@ -1581,7 +1593,10 @@ void AchievementManager::MemoryPoker(u32 address, u8* buffer, u32 num_bytes, rc_
     return;
   Core::CPUThreadGuard thread_guard(*system);
   std::lock_guard lg{instance.m_memory_lock};
-  system->GetMemory().CopyToEmu(address, buffer, num_bytes);
+  if (address < MEM1_SIZE)
+    system->GetMemory().CopyToEmu(address, buffer, num_bytes);
+  else
+    system->GetMemory().CopyToEmu(address - MEM1_SIZE + MEM2_START, buffer, num_bytes);
   std::copy(buffer, buffer + num_bytes, instance.m_cloned_memory.begin() + address);
 }
 void AchievementManager::GameTitleEstimateHandler(char* buffer, u32 buffer_size,
